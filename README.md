@@ -32,16 +32,18 @@
 
 ## 📱 Screenshots
 
-<p align="center">
-  <img src="screenshots/login.png" width="200" alt="Login"/>
-  <img src="screenshots/report_issue.png" width="200" alt="Report Issue"/>
-  <img src="screenshots/my_reports.png" width="200" alt="My Reports"/>
-</p>
-
-<p align="center">
-  <img src="screenshots/admin_login.png" width="200" alt="Admin Login"/>
-  <img src="screenshots/admin_dashboard.png" width="200" alt="Admin Dashboard"/>
-</p>
+<table>
+  <tr>
+    <td align="center"><img src="screenshots/login.png" width="180" style="border-radius: 10px"/><br/><b>Login</b></td>
+    <td align="center"><img src="screenshots/report_issue.png" width="180" style="border-radius: 10px"/><br/><b>Report Issue</b></td>
+    <td align="center"><img src="screenshots/my_reports.png" width="180" style="border-radius: 10px"/><br/><b>My Reports</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/admin_login.png" width="180" style="border-radius: 10px"/><br/><b>Admin Login</b></td>
+    <td align="center"><img src="screenshots/admin_dashboard.png" width="180" style="border-radius: 10px"/><br/><b>Admin Dashboard</b></td>
+    <td align="center"></td>
+  </tr>
+</table>
 
 | Screen | Description |
 |--------|-------------|
