@@ -32,9 +32,24 @@
 
 ## 📱 Screenshots
 
-| Login | Report Issue | My Reports | Admin Dashboard |
-|:-----:|:------------:|:----------:|:---------------:|
-| Modern login with gradient design | Category selection & photo capture | Timeline view with status tracking | Filter and manage all reports |
+<p align="center">
+  <img src="screenshots/login.png" width="200" alt="Login"/>
+  <img src="screenshots/report_issue.png" width="200" alt="Report Issue"/>
+  <img src="screenshots/my_reports.png" width="200" alt="My Reports"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/admin_login.png" width="200" alt="Admin Login"/>
+  <img src="screenshots/admin_dashboard.png" width="200" alt="Admin Dashboard"/>
+</p>
+
+| Screen | Description |
+|--------|-------------|
+| **Login** | Modern student login with gradient design and forgot password |
+| **Report Issue** | Category selection, photo capture, and GPS location |
+| **My Reports** | Timeline view with status tracking and filters |
+| **Admin Login** | Secure admin authentication with verification code |
+| **Admin Dashboard** | Manage all reports with status updates |
 
 ---
 
