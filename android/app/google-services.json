@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "539559645242",
+    "project_id": "campusresq",
+    "storage_bucket": "campusresq.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:539559645242:android:778de60ef5c168035d2503",
+        "android_client_info": {
+          "package_name": "com.example.campus_resq"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGAkSLJAE8izTYxHh8yxymEsHZBhVN3ao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
