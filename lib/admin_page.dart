@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,9 @@ class _AdminPageState extends State<AdminPage> with SingleTickerProviderStateMix
   String _selectedFilter = 'All';
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  StreamSubscription<QuerySnapshot>? _reportsSubscription;
+  int _lastReportCount = -1;
+  bool _isFirstLoad = true;
 
   final List<String> _filters = ['All', 'Pending', 'In Progress', 'Resolved'];
 
@@ -28,10 +32,93 @@ class _AdminPageState extends State<AdminPage> with SingleTickerProviderStateMix
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
     _animationController.forward();
+    _listenForNewReports();
+  }
+
+  void _listenForNewReports() {
+    _reportsSubscription = FirebaseFirestore.instance
+        .collection('reports')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      final currentCount = snapshot.docs.length;
+      
+      if (_isFirstLoad) {
+        _lastReportCount = currentCount;
+        _isFirstLoad = false;
+        return;
+      }
+
+      if (currentCount > _lastReportCount && _lastReportCount >= 0) {
+        // New report detected
+        final newReport = snapshot.docs.first.data();
+        _showNewReportDialog(newReport);
+      }
+      
+      _lastReportCount = currentCount;
+    });
+  }
+
+  void _showNewReportDialog(Map<String, dynamic> reportData) {
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.adminGradient,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.adminPrimary.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.notification_important_rounded, color: Colors.white, size: 44),
+              ),
+              const SizedBox(height: 24),
+              const Text('New Report Received!', style: AppTextStyles.heading2),
+              const SizedBox(height: 12),
+              Text(
+                'A new ${reportData['category'] ?? 'issue'} report has been submitted and requires your attention.',
+                style: AppTextStyles.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 28),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.adminPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: const Text('View Reports', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _reportsSubscription?.cancel();
     _animationController.dispose();
     super.dispose();
   }
