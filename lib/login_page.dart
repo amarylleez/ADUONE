@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'app_theme.dart';
 import 'register_page.dart';
 import 'admin_login_page.dart';
+import 'report_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -66,6 +67,14 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+      
+      // Navigate to ReportPage on successful login
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ReportPage()),
+        );
+      }
     } on FirebaseAuthException catch (e) {
       String message = 'Login failed';
       if (e.code == 'user-not-found') {
