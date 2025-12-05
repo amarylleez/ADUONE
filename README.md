@@ -205,7 +205,7 @@ service firebase.storage {
 
 ### Admin
 - Access via separate admin login portal
-- Requires admin verification code: `RESQ2025ADMIN`
+- Requires admin verification code: `ADUONE2025ADMIN`
 - View all submitted reports
 - Update report status (Pending → In Progress → Resolved)
 - Filter reports by status
@@ -217,7 +217,7 @@ service firebase.storage {
 ### Project Structure
 
 ```
-RESQ/
+ADUONE/
 ├── android/                  # Android-specific files
 ├── ios/                      # iOS-specific files
 ├── lib/                      # Dart source code
@@ -265,8 +265,8 @@ We welcome contributions! Here's how you can help:
 
 2. **Clone your fork**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/RESQ.git
-   cd RESQ
+   git clone https://github.com/YOUR_USERNAME/ADUONE.git
+   cd ADUONE
    ```
 
 3. **Create a feature branch**
@@ -363,9 +363,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-**Project Maintainer:** [@jerungpyro](https://github.com/jerungpyro)
+**Project Maintainer:** [@amarylleez](https://github.com/amarylleez)
 
-**Project Link:** [https://github.com/jerungpyro/RESQ](https://github.com/jerungpyro/RESQ)
+**Project Link:** [https://github.com/amarylleez/ADUONE](https://github.com/amarylleez/ADUONE)
 
 ---
 

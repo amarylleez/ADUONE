@@ -1,6 +1,6 @@
-import 'package:campus_resq/login_page.dart';
-import 'package:campus_resq/report_page.dart';
-import 'package:campus_resq/app_theme.dart';
+import 'package:aduone/login_page.dart';
+import 'package:aduone/report_page.dart';
+import 'package:aduone/app_theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';

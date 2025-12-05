@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:campus_resq/student_history_page.dart';
-import 'package:campus_resq/app_theme.dart';
+import 'package:aduone/student_history_page.dart';
+import 'package:aduone/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
