@@ -1,4 +1,4 @@
-# 🚨 CampusResQ
+# 🚨 ADUONE
 
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter"/>
@@ -15,7 +15,7 @@
 
 ## 📖 Overview
 
-**CampusResQ** is a mobile application designed to streamline the process of reporting and managing campus facility issues. Students can easily report problems like broken lights, plumbing issues, or safety hazards, while administrators can efficiently track and resolve these reports.
+**ADUONE** is a mobile application designed to streamline the process of reporting and managing campus facility issues. Students can easily report problems like broken lights, plumbing issues, or safety hazards, while administrators can efficiently track and resolve these reports.
 
 ### ✨ Key Features
 
@@ -100,8 +100,8 @@ Before you begin, ensure you have the following installed:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/jerungpyro/RESQ.git
-   cd RESQ
+   git clone https://github.com/amarylleez/ADUONE.git
+   cd ADUONE
    ```
 
 2. **Install dependencies**
