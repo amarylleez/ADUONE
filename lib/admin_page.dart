@@ -772,7 +772,7 @@ class _AdminPageState extends State<AdminPage> with SingleTickerProviderStateMix
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        '${data['latitude']?.toStringAsFixed(6) ?? 'N/A'}, ${data['longitude']?.toStringAsFixed(6) ?? 'N/A'}',
+                        data['location'] ?? 'Location not specified',
                         style: AppTextStyles.caption,
                         overflow: TextOverflow.ellipsis,
                       ),

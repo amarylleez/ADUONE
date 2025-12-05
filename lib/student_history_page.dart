@@ -609,7 +609,7 @@ class _StudentHistoryPageState extends State<StudentHistoryPage> with SingleTick
                                   _buildDetailRow(
                                     Icons.location_on_rounded,
                                     'Location',
-                                    '${data['latitude']?.toStringAsFixed(6) ?? 'N/A'}, ${data['longitude']?.toStringAsFixed(6) ?? 'N/A'}',
+                                    data['location'] ?? 'Location not specified',
                                     AppTheme.accentColor,
                                   ),
                                 ],

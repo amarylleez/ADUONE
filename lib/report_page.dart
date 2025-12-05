@@ -20,6 +20,7 @@ class ReportPage extends StatefulWidget {
 class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateMixin {
   File? _imageFile;
   final _descController = TextEditingController();
+  final _locationController = TextEditingController();
   bool _isLoading = false;
   String? _selectedCategory;
   
@@ -53,6 +54,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
   void dispose() {
     _animationController.dispose();
     _descController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -225,6 +227,10 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
       _showErrorSnackBar('Please add a photo of the issue');
       return;
     }
+    if (_locationController.text.isEmpty) {
+      _showErrorSnackBar('Please specify the location');
+      return;
+    }
     if (_descController.text.isEmpty) {
       _showErrorSnackBar('Please add a description');
       return;
@@ -237,12 +243,22 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
     setState(() => _isLoading = true);
 
     try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
+      // Try to get GPS coordinates as backup (optional)
+      double? latitude;
+      double? longitude;
+      try {
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+        if (permission != LocationPermission.denied && permission != LocationPermission.deniedForever) {
+          Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+          latitude = position.latitude;
+          longitude = position.longitude;
+        }
+      } catch (e) {
+        // GPS is optional, continue without it
       }
-      
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
 
       String fileName = '${DateTime.now().millisecondsSinceEpoch}_${FirebaseAuth.instance.currentUser?.uid}';
       Reference ref = FirebaseStorage.instance.ref().child('reports').child(fileName);
@@ -252,11 +268,12 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
       await FirebaseFirestore.instance.collection('reports').add({
         'userId': FirebaseAuth.instance.currentUser?.uid,
         'userEmail': FirebaseAuth.instance.currentUser?.email,
+        'location': _locationController.text,
         'description': _descController.text,
         'category': _selectedCategory,
         'imageUrl': imageUrl,
-        'latitude': position.latitude,
-        'longitude': position.longitude,
+        'latitude': latitude,
+        'longitude': longitude,
         'status': 'Pending',
         'timestamp': FieldValue.serverTimestamp(),
       });
@@ -265,6 +282,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
         _showSuccessDialog();
         setState(() {
           _imageFile = null;
+          _locationController.clear();
           _descController.clear();
           _selectedCategory = null;
         });
@@ -422,6 +440,9 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                 
                 // Category Selection
                 SliverToBoxAdapter(child: _buildCategorySection()),
+                
+                // Location Input
+                SliverToBoxAdapter(child: _buildLocationSection()),
                 
                 // Description Input
                 SliverToBoxAdapter(child: _buildDescriptionSection()),
@@ -742,6 +763,79 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                 ),
               );
             }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationSection() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.location_on_rounded, color: AppTheme.primaryColor, size: 22),
+              const SizedBox(width: 10),
+              const Text('Location', style: AppTextStyles.heading3),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Required',
+                  style: TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: AppTheme.softShadow,
+            ),
+            child: TextField(
+              controller: _locationController,
+              style: const TextStyle(
+                fontSize: 15,
+                color: AppTheme.textPrimary,
+                height: 1.5,
+              ),
+              decoration: InputDecoration(
+                hintText: 'E.g., Block A, Room 101 / Library 2nd Floor',
+                hintStyle: TextStyle(
+                  color: AppTheme.textMuted.withOpacity(0.7),
+                  fontSize: 14,
+                ),
+                prefixIcon: const Icon(Icons.place_outlined, color: AppTheme.textMuted),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.all(20),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Specify the building, floor, room, or area where the issue is located',
+            style: TextStyle(
+              color: AppTheme.textMuted,
+              fontSize: 12,
+            ),
           ),
         ],
       ),
