@@ -38,23 +38,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CampusResQ',
+      title: 'ADUONE',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      // Check Auth State to decide where to go
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          // Show splash screen while checking auth state
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const SplashScreen();
-          }
-          if (snapshot.hasData) {
-            return const ReportPage(); // User is logged in
-          }
-          return const LoginPage(); // User needs to login
-        },
-      ),
+      // Always start with LoginPage for security
+      home: const LoginPage(),
     );
   }
 }
