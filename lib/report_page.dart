@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:aduone/student_history_page.dart';
 import 'package:aduone/app_theme.dart';
+import 'package:aduone/login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -401,9 +402,15 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              FirebaseAuth.instance.signOut();
+              await FirebaseAuth.instance.signOut();
+              if (mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorColor,

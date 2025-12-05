@@ -15,19 +15,14 @@ class _AdminLoginPageState extends State<AdminLoginPage> with SingleTickerProvid
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _adminCodeController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   
   bool _isLoading = false;
   bool _obscurePassword = true;
-  bool _obscureAdminCode = true;
   
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-
-  // Admin verification code (in production, this should be managed securely)
-  static const String _adminVerificationCode = 'ADUONE2025ADMIN';
 
   @override
   void initState() {
@@ -50,73 +45,48 @@ class _AdminLoginPageState extends State<AdminLoginPage> with SingleTickerProvid
     _animationController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _adminCodeController.dispose();
     super.dispose();
   }
 
   Future<void> _adminLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Verify admin code first
-    if (_adminCodeController.text.trim() != _adminVerificationCode) {
-      _showErrorSnackBar('Invalid admin verification code');
-      return;
-    }
-
     setState(() => _isLoading = true);
 
     try {
+      final email = _emailController.text.trim();
+      
+      // Check if email exists in admins collection
+      final adminQuery = await FirebaseFirestore.instance
+          .collection('admins')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+      
+      if (adminQuery.docs.isEmpty) {
+        _showErrorSnackBar('You are not authorized as an admin');
+        setState(() => _isLoading = false);
+        return;
+      }
+
       // Sign in with email and password
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
+        email: email,
         password: _passwordController.text.trim(),
       );
 
-      // Check if user has admin role in Firestore
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user?.uid)
-          .get();
-
-      if (userDoc.exists) {
-        final userData = userDoc.data() as Map<String, dynamic>?;
-        if (userData?['role'] == 'admin') {
-          // Already admin, proceed to dashboard
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const AdminPage()),
-            );
-          }
-        } else {
-          // User exists but not admin - upgrade to admin since they have the correct code
-          await FirebaseFirestore.instance.collection('users').doc(userCredential.user?.uid).update({
-            'role': 'admin',
-            'upgradedToAdminAt': FieldValue.serverTimestamp(),
-          });
-          
-          if (mounted) {
-            _showSuccessSnackBar('Admin access granted!');
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const AdminPage()),
-            );
-          }
-        }
-      } else {
-        // If no user document exists, create one with admin role
-        await FirebaseFirestore.instance.collection('users').doc(userCredential.user?.uid).set({
-          'email': _emailController.text.trim(),
-          'role': 'admin',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-        
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const AdminPage()),
-          );
-        }
+      // Update or create user document with admin role
+      await FirebaseFirestore.instance.collection('users').doc(userCredential.user?.uid).set({
+        'email': email,
+        'role': 'admin',
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminPage()),
+        );
       }
     } on FirebaseAuthException catch (e) {
       String message = 'Login failed';
@@ -374,7 +344,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> with SingleTickerProvid
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Admin verification code required for access',
+                  'Only authorized admins can access this panel',
                   style: TextStyle(
                     color: AppTheme.textSecondary,
                     fontSize: 12,
@@ -442,29 +412,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> with SingleTickerProvid
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter your password';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 20),
-            
-            // Admin Code Field
-            _buildInputField(
-              controller: _adminCodeController,
-              label: 'Admin Verification Code',
-              hint: 'Enter admin code',
-              icon: Icons.vpn_key_outlined,
-              obscureText: _obscureAdminCode,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscureAdminCode ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  color: AppTheme.textMuted,
-                ),
-                onPressed: () => setState(() => _obscureAdminCode = !_obscureAdminCode),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter the admin verification code';
                 }
                 return null;
               },
