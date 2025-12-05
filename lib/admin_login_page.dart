@@ -27,7 +27,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> with SingleTickerProvid
   late Animation<Offset> _slideAnimation;
 
   // Admin verification code (in production, this should be managed securely)
-  static const String _adminVerificationCode = 'RESQ2025ADMIN';
+  static const String _adminVerificationCode = 'ADUONE2025ADMIN';
 
   @override
   void initState() {
@@ -410,7 +410,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> with SingleTickerProvid
             _buildInputField(
               controller: _emailController,
               label: 'Admin Email',
-              hint: 'admin@campusresq.edu',
+              hint: 'admin@aduone.edu',
               icon: Icons.email_outlined,
               keyboardType: TextInputType.emailAddress,
               validator: (value) {

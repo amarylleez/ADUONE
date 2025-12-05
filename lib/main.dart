@@ -84,7 +84,7 @@ class SplashScreen extends StatelessWidget {
               ShaderMask(
                 shaderCallback: (bounds) => AppTheme.primaryGradient.createShader(bounds),
                 child: const Text(
-                  'CampusResQ',
+                  'ADUONE',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,

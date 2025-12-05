@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "campus_resq" "\0"
+            VALUE "FileDescription", "ADUONE" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "campus_resq" "\0"
+            VALUE "InternalName", "aduone" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "campus_resq.exe" "\0"
-            VALUE "ProductName", "campus_resq" "\0"
+            VALUE "OriginalFilename", "aduone.exe" "\0"
+            VALUE "ProductName", "ADUONE" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

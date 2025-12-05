@@ -133,14 +133,14 @@ Before you begin, ensure you have the following installed:
 ### Step 2: Add Android App
 
 1. In Firebase Console, click "Add app" → Android
-2. Enter package name: `com.example.campus_resq`
+2. Enter package name: `com.example.aduone`
 3. Download `google-services.json`
 4. Place it in `android/app/` directory
 
 ### Step 3: Add iOS App (Optional)
 
 1. In Firebase Console, click "Add app" → iOS
-2. Enter bundle ID: `com.example.campusResq`
+2. Enter bundle ID: `com.example.aduone`
 3. Download `GoogleService-Info.plist`
 4. Place it in `ios/Runner/` directory
 

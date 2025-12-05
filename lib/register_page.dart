@@ -244,7 +244,7 @@ class _RegisterPageState extends State<RegisterPage> with SingleTickerProviderSt
               ),
               const SizedBox(width: 8),
               const Text(
-                'Join CampusResQ',
+                'Join ADUONE',
                 style: TextStyle(
                   color: AppTheme.primaryColor,
                   fontSize: 13,

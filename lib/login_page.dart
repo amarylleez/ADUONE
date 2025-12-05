@@ -231,7 +231,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         ShaderMask(
           shaderCallback: (bounds) => AppTheme.primaryGradient.createShader(bounds),
           child: const Text(
-            'CampusResQ',
+            'ADUONE',
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w800,
