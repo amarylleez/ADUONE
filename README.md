@@ -4,7 +4,6 @@
   <img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter"/>
   <img src="https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart"/>
   <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase"/>
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License"/>
 </p>
 
 <p align="center">
@@ -21,7 +20,7 @@
 
 - 🔐 **Secure Authentication** - Separate login systems for students and administrators
 - 📸 **Photo Capture** - Take photos directly or upload from gallery
-- 📍 **GPS Location** - Automatic location tagging for precise issue tracking
+- 📍 **Location Details** - User-entered location field (optional GPS coordinates captured when permitted)
 - 📊 **Real-time Dashboard** - Live updates using Firebase Firestore
 - 🏷️ **Category System** - Organize issues by type (Infrastructure, Electrical, Plumbing, Safety, etc.)
 - 📱 **Push Notifications** - Get notified when report status changes
@@ -48,9 +47,9 @@
 | Screen | Description |
 |--------|-------------|
 | **Login** | Modern student login with gradient design and forgot password |
-| **Report Issue** | Category selection, photo capture, and GPS location |
+| **Report Issue** | Category selection, photo capture, and location details (optional GPS coordinates) |
 | **My Reports** | Timeline view with status tracking and filters |
-| **Admin Login** | Secure admin authentication with verification code |
+| **Admin Login** | Secure admin authentication (email allowlist + password) |
 | **Admin Dashboard** | Manage all reports with status updates |
 
 ---
@@ -79,6 +78,7 @@ lib/
 | **Cloud Firestore** | Real-time database |
 | **Firebase Storage** | Image storage |
 | **Firebase Messaging** | Push notifications |
+| **Firebase Cloud Functions** | Server-side automation (admin email notifications) |
 | **Geolocator** | GPS location services |
 | **Image Picker** | Camera and gallery access |
 
@@ -154,6 +154,7 @@ Navigate to Firebase Console and enable:
 | **Firestore** | Build → Firestore Database | Create database in production/test mode |
 | **Storage** | Build → Storage | Set up storage bucket |
 | **Messaging** | Build → Cloud Messaging | Enable for push notifications |
+| **Functions** | Build → Functions | Enable billing if required by your plan |
 
 ### Step 5: Firestore Security Rules
 
@@ -161,6 +162,15 @@ Navigate to Firebase Console and enable:
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Admin allowlist
+    match /admins/{adminId} {
+      // This app checks the admins allowlist before admin sign-in.
+      // If you keep that flow, you must allow read access here (consider restricting to a controlled environment).
+      allow read: if true;
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     // Users collection
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -205,7 +215,7 @@ service firebase.storage {
 
 ### Admin
 - Access via separate admin login portal
-- Requires admin verification code: `ADUONE2025ADMIN`
+- Authorized admins are allowlisted in Firestore `admins` collection
 - View all submitted reports
 - Update report status (Pending → In Progress → Resolved)
 - Filter reports by status
@@ -221,6 +231,7 @@ ADUONE/
 ├── android/                  # Android-specific files
 ├── ios/                      # iOS-specific files
 ├── lib/                      # Dart source code
+├── functions/                 # Firebase Cloud Functions (TypeScript)
 ├── test/                     # Unit and widget tests
 ├── web/                      # Web support files
 ├── pubspec.yaml              # Dependencies
@@ -347,9 +358,81 @@ Example: `feat: add dark mode support`
 
 ---
 
+## ✉️ Admin Email Notifications (Automatic)
+
+By default, admins only see **in-app** notifications when they are actively using the app. This project includes an optional Firebase **Cloud Function** that automatically emails **all admins** when a new report is submitted.
+
+### How It Works
+
+- When a student submits a report, a Firestore document is created in `reports`.
+- The Cloud Function `emailAdminsOnNewReport` triggers on `reports/{reportId}` creation.
+- It queries the `admins` collection for documents containing an `email` field.
+- It sends a single email addressed to all admin email addresses (no student input required).
+
+### Requirements
+
+- Firebase project configured for this app
+- Firebase CLI installed (`npm i -g firebase-tools`)
+- An SMTP account (example providers: SendGrid SMTP, Mailgun SMTP, Gmail SMTP with an App Password)
+
+### Setup Steps
+
+1) Set your Firebase project ID
+
+- Edit `.firebaserc` and set your Firebase project ID under the `report` alias.
+
+2) Install function dependencies
+
+```bash
+cd functions
+npm install
+```
+
+3) Configure SMTP credentials
+
+The function reads SMTP settings from **environment variables** (recommended for local testing) OR **Firebase Functions runtime config** (recommended for deployed functions).
+
+Option A (Firebase runtime config):
+
+```bash
+firebase functions:config:set \
+  smtp.host="YOUR_SMTP_HOST" \
+  smtp.port="587" \
+  smtp.user="YOUR_SMTP_USERNAME" \
+  smtp.pass="YOUR_SMTP_PASSWORD" \
+  smtp.from="ADUONE <no-reply@yourdomain.com>" \
+  smtp.secure="false"
+```
+
+Option B (Environment variables - local only):
+
+Set these in your shell before running emulators:
+
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `SMTP_FROM`
+- optional: `SMTP_SECURE` (`true`/`false`)
+
+4) Deploy the function
+
+```bash
+cd functions
+npm run deploy
+```
+
+### Notes
+
+- The admin email list comes from Firestore `admins` documents with an `email` field.
+- If no admins exist, the function logs a warning and skips sending.
+- Email sending happens server-side, so the student app does not need to know any admin emails.
+
+---
+
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+No license file is currently included in this repository.
 
 ---
 
