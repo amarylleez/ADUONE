@@ -24,7 +24,9 @@
 - 📊 **Real-time Dashboard** - Live updates using Firebase Firestore
 - 🏷️ **Category System** - Organize issues by type (Infrastructure, Electrical, Plumbing, Safety, etc.)
 - 📱 **Push Notifications** - Get notified when report status changes
+- 🔔 **Admin Bell Notifications** - Admins see pending reports in a notification panel with unread badge
 - 📈 **Status Tracking** - Track reports through Pending → In Progress → Resolved
+- 📊 **Smart Stats** - Students see Total, In Progress, and Resolved counts at a glance
 - 🎨 **Modern UI** - Beautiful 2025 design with animations and gradients
 
 ---
@@ -50,7 +52,7 @@
 | **Report Issue** | Category selection, photo capture, and location details (optional GPS coordinates) |
 | **My Reports** | Timeline view with status tracking and filters |
 | **Admin Login** | Secure admin authentication (email allowlist + password) |
-| **Admin Dashboard** | Manage all reports with status updates |
+| **Admin Dashboard** | Manage reports with bell notifications, status updates, and filters |
 
 ---
 
@@ -216,7 +218,9 @@ service firebase.storage {
 ### Admin
 - Access via separate admin login portal
 - Authorized admins are allowlisted in Firestore `admins` collection
-- View all submitted reports
+- **Bell notification icon** shows pending reports requiring attention
+- Notification badge displays unread count
+- View all submitted reports in a clean dashboard
 - Update report status (Pending → In Progress → Resolved)
 - Filter reports by status
 
