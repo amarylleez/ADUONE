@@ -534,14 +534,14 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
           .snapshots(),
       builder: (context, snapshot) {
         int totalReports = 0;
-        int pendingReports = 0;
+        int inProgressReports = 0;
         int resolvedReports = 0;
 
         if (snapshot.hasData) {
           totalReports = snapshot.data!.docs.length;
           for (var doc in snapshot.data!.docs) {
             final data = doc.data() as Map<String, dynamic>;
-            if (data['status'] == 'Pending') pendingReports++;
+            if (data['status'] == 'In Progress') inProgressReports++;
             if (data['status'] == 'Resolved') resolvedReports++;
           }
         }
@@ -552,7 +552,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
             children: [
               _buildStatCard('Total', totalReports.toString(), AppTheme.primaryColor, Icons.assignment_outlined),
               const SizedBox(width: 12),
-              _buildStatCard('Pending', pendingReports.toString(), AppTheme.warningColor, Icons.hourglass_empty_rounded),
+              _buildStatCard('In Progress', inProgressReports.toString(), AppTheme.accentColor, Icons.engineering_rounded),
               const SizedBox(width: 12),
               _buildStatCard('Resolved', resolvedReports.toString(), AppTheme.successColor, Icons.check_circle_outline_rounded),
             ],

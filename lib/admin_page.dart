@@ -18,6 +18,10 @@ class _AdminPageState extends State<AdminPage> with SingleTickerProviderStateMix
   StreamSubscription<QuerySnapshot>? _reportsSubscription;
   int _lastReportCount = -1;
   bool _isFirstLoad = true;
+  
+  // New reports for bell notification
+  final List<Map<String, dynamic>> _newReports = [];
+  int _unreadCount = 0;
 
   final List<String> _filters = ['All', 'Pending', 'In Progress', 'Resolved'];
 
@@ -44,76 +48,251 @@ class _AdminPageState extends State<AdminPage> with SingleTickerProviderStateMix
       final currentCount = snapshot.docs.length;
       
       if (_isFirstLoad) {
+        // On first load, populate notifications with all Pending reports
         _lastReportCount = currentCount;
         _isFirstLoad = false;
+        
+        // Load pending reports as notifications
+        final pendingReports = snapshot.docs.where((doc) {
+          final data = doc.data();
+          return data['status'] == 'Pending';
+        }).toList();
+        
+        if (pendingReports.isNotEmpty) {
+          setState(() {
+            for (var doc in pendingReports) {
+              _newReports.add({
+                'id': doc.id,
+                ...doc.data(),
+              });
+            }
+            _unreadCount = pendingReports.length;
+          });
+        }
         return;
       }
 
       if (currentCount > _lastReportCount && _lastReportCount >= 0) {
-        // New report detected
-        final newReport = snapshot.docs.first.data();
-        _showNewReportDialog(newReport);
+        // New report detected - add to notifications list
+        final newReportDoc = snapshot.docs.first;
+        final newReportData = newReportDoc.data();
+        setState(() {
+          _newReports.insert(0, {
+            'id': newReportDoc.id,
+            ...newReportData,
+          });
+          _unreadCount++;
+        });
       }
       
       _lastReportCount = currentCount;
     });
   }
 
-  void _showNewReportDialog(Map<String, dynamic> reportData) {
-    if (!mounted) return;
+  void _showNotificationsPanel() {
+    setState(() => _unreadCount = 0);
     
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Padding(
-          padding: const EdgeInsets.all(32),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        maxChildSize: 0.85,
+        minChildSize: 0.3,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
+              // Handle
               Container(
-                width: 80,
-                height: 80,
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
-                  gradient: AppTheme.adminGradient,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.adminPrimary.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.adminPrimary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.notifications_rounded, color: AppTheme.adminPrimary),
                     ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Text('New Reports', style: AppTextStyles.heading3),
+                    ),
+                    if (_newReports.isNotEmpty)
+                      TextButton(
+                        onPressed: () {
+                          setState(() => _newReports.clear());
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Clear All'),
+                      ),
                   ],
                 ),
-                child: const Icon(Icons.notification_important_rounded, color: Colors.white, size: 44),
               ),
-              const SizedBox(height: 24),
-              const Text('New Report Received!', style: AppTextStyles.heading2),
-              const SizedBox(height: 12),
-              Text(
-                'A new ${reportData['category'] ?? 'issue'} report has been submitted and requires your attention.',
-                style: AppTextStyles.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 28),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.adminPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: const Text('View Reports', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                ),
+              const Divider(height: 1),
+              // List
+              Expanded(
+                child: _newReports.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.notifications_off_rounded, size: 48, color: Colors.grey.shade300),
+                            const SizedBox(height: 16),
+                            Text('No new reports', style: AppTextStyles.bodyMedium),
+                          ],
+                        ),
+                      )
+                    : ListView.separated(
+                        controller: scrollController,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _newReports.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final report = _newReports[index];
+                          final timestamp = report['timestamp'] as Timestamp?;
+                          final timeAgo = timestamp != null
+                              ? _formatTimeAgo(timestamp.toDate())
+                              : 'Just now';
+                          
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                              // Scroll to report or filter by this report
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.surfaceColor,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: Row(
+                                children: [
+                                  // Image thumbnail
+                                  if (report['imageUrl'] != null)
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.network(
+                                        report['imageUrl'],
+                                        width: 50,
+                                        height: 50,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          width: 50,
+                                          height: 50,
+                                          color: Colors.grey.shade200,
+                                          child: const Icon(Icons.image, color: Colors.grey),
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.adminPrimary.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: const Icon(Icons.report_rounded, color: AppTheme.adminPrimary),
+                                    ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.adminPrimary.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                report['category'] ?? 'General',
+                                                style: const TextStyle(
+                                                  color: AppTheme.adminPrimary,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            Text(
+                                              timeAgo,
+                                              style: AppTextStyles.caption,
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          report['description'] ?? 'No description',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppTheme.textPrimary,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.location_on_rounded, size: 12, color: AppTheme.textMuted),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                report['location'] ?? 'Unknown location',
+                                                style: AppTextStyles.caption,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  String _formatTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+    
+    if (difference.inMinutes < 1) return 'Just now';
+    if (difference.inMinutes < 60) return '${difference.inMinutes}m ago';
+    if (difference.inHours < 24) return '${difference.inHours}h ago';
+    if (difference.inDays < 7) return '${difference.inDays}d ago';
+    return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
   }
 
   @override
@@ -347,20 +526,6 @@ class _AdminPageState extends State<AdminPage> with SingleTickerProviderStateMix
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: AppTheme.softShadow,
-              ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.textPrimary, size: 20),
-            ),
-          ),
-          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,6 +562,50 @@ class _AdminPageState extends State<AdminPage> with SingleTickerProviderStateMix
               ],
             ),
           ),
+          // Bell notification icon
+          GestureDetector(
+            onTap: _showNotificationsPanel,
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: AppTheme.softShadow,
+              ),
+              child: Stack(
+                children: [
+                  const Center(
+                    child: Icon(Icons.notifications_rounded, color: AppTheme.adminPrimary),
+                  ),
+                  if (_unreadCount > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.errorColor,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                        child: Center(
+                          child: Text(
+                            _unreadCount > 9 ? '9+' : _unreadCount.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
           GestureDetector(
             onTap: _showLogoutDialog,
             child: Container(
